@@ -12,7 +12,11 @@ class ODESystem(ABC):
         pass
 
     @abstractmethod
-    def jacobian(self, x: np.ndarray, u: np.ndarray = None) -> np.ndarray:
+    def jacobian_x_num(self, x: np.ndarray, u: np.ndarray = None) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def jacobian_u_num(self, x: np.ndarray, u: np.ndarray = None) -> np.ndarray:
         pass
 
     def output(self, x: np.ndarray) -> np.ndarray:
