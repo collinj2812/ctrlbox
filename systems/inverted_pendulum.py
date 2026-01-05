@@ -1,11 +1,18 @@
 import numpy as np
 from systems.base import ODESystem
+from helper.numerical_jacobian import numerical_jacobian
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.animation import FuncAnimation
 
 class InvertedPendulum(ODESystem):
+    def __init__(self):
+        super().__init__()
+        self.jac_is_setup = False
+        self.jac_x = None
+        self.jac_u = None
+
     def default_params(self):
         return {'M': 1.0, 'm': 0.1, 'l': 0.5, 'g': 9.81, 'mu_c': 0.01, 'mu_p': 0.04}
 
@@ -22,11 +29,24 @@ class InvertedPendulum(ODESystem):
             x[1],
             (u[0] + m * l * x[3] ** 2 * np.sin(x[2]) - mu_c * np.sign(x[1])) / (M + m),
             x[3],
-            (g * np.sin(x[2] - np.cos(x[2]) * (u[0] + m * l * x[3] ** 2 * np.sin(x[2])) / (M + m)) - mu_p * x[3]) / (l * (4/3 - m * np.cos(x[2]) ** 2 / (M + m)))
+            (g * np.sin(x[2]) - np.cos(x[2]) * ((u[0] + m * l * x[3] ** 2 * np.sin(x[2])) / (M + m)) - mu_p * x[3]) / (l * (4/3 - m * np.cos(x[2]) ** 2 / (M + m)))
         ])
 
-    def jacobian(self, x: np.ndarray, u: np.ndarray = None) -> np.ndarray:
-        pass
+    def jacobian_x_num(self, x: np.ndarray, u: np.ndarray = None) -> np.ndarray:
+        if self.jac_is_setup == False:
+            print('Call setup Jacobian before accessing it')
+        return self.jac_x
+
+    def jacobian_u_num(self, x: np.ndarray, u: np.ndarray = None) -> np.ndarray:
+        if self.jac_is_setup == False:
+            print('Call setup Jacobian before accessing it')
+        return self.jac_u
+
+    def setup_jacobian_num(self, x0, u0, h=1e-6):
+        self.jac_x, self.jac_u = numerical_jacobian(self.rhs, self._get_n_states(), self._get_n_inputs(), x0, u0, h)
+
+        self.jac_is_setup = True
+
 
 # animation
 def animate_pendulum(t, x, l, u=None, save_path=None):
