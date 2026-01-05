@@ -11,7 +11,7 @@ system = InvertedPendulum()
 
 # first set angle to 2 pi
 angle_set = 2 * np.pi
-controller = PIDController(10, 0, 1, angle_set)
+controller = PIDController(100, 0, 10, angle_set)
 
 t_span = (0, 30)
 dt = 0.001
@@ -19,7 +19,7 @@ n_steps = int((t_span[1] - t_span[0]) / dt) + 1
 t = np.linspace(*t_span, n_steps + 1)
 x_0 = [1, 0, 2 * np.pi, 0]
 
-Q = np.diag([0, 0, 0, 1]) * 1e-3
+Q = np.diag([0, 0, 0, 1]) * 1e-4
 
 x = np.zeros((n_steps + 1, system._get_n_states()))
 u = np.zeros((n_steps, system._get_n_inputs()))
