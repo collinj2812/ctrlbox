@@ -28,4 +28,8 @@ def rk4(sys, x, u = None, t=None, dt = 0.1):
         'comp_time': time_end - time_start,
         'dt': dt
     }
+
+    # remove any second shapes from array
+    sol = np.array(sol).squeeze()
+
     return sol, meta_data
