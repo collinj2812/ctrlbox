@@ -7,7 +7,7 @@ import numpy as np
 import sys
 
 system = InvertedPendulum()
-outer_controller = PIDController(-1e-6*0, -2e-6, -0.0004, 1)  # track position 0 and change angle for this
+outer_controller = PIDController(-5e-4, 0, -2e-3, 1)  # track position 0 and change angle for this
 
 # first set angle to 2 pi
 angle_set = 2 * np.pi
@@ -21,6 +21,8 @@ x_0 = [1, 0, 3 * np.pi, 0]
 
 Q = np.diag([0, 0, 0, 1e-4]) * 0
 use_controller = False
+equilibrium = None
+safety_factor = 0.99  # angle set-point is not allowed to be less
 
 x = np.zeros((n_steps + 1, system._get_n_states()))
 u = np.zeros((n_steps, system._get_n_inputs()))
@@ -30,6 +32,11 @@ for step_i in range(n_steps):
     if use_controller:
         # outer loop
         angle_set = angle_set + outer_controller(x[step_i, 0], dt)  # x[step_i, 0] is position
+        # check angle and only allow small deviations to keep stability
+        if angle_set < safety_factor * equilibrium:
+            angle_set = safety_factor * equilibrium
+        elif angle_set > (2 - safety_factor) * equilibrium:
+            angle_set = (2 - safety_factor) * equilibrium
         inner_controller.setpoint = angle_set
         u[step_i] = inner_controller(x[step_i, 2], dt)  # x[step_i, 2] is angle
     else:
@@ -43,10 +50,12 @@ for step_i in range(n_steps):
         # check if close to upright and turn on controller (check 2 pi and 4 pi)
         if np.fabs(x[step_i, 2] - 2 * np.pi) < 0.2:
             use_controller = True
+            equilibrium = 2 * np.pi
             angle_set = 2 * np.pi
             inner_controller.setpoint = angle_set
         elif np.fabs(x[step_i, 2] - 4 * np.pi) < 0.2:
             use_controller = True
+            equilibrium = 4 * np.pi
             angle_set = 4 * np.pi
             inner_controller.setpoint = angle_set
 
